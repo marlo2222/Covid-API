@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"    
 	"os"
 	"encoding/json"
-	//"strings"
 	"reflect"
 )	
 
@@ -277,7 +276,31 @@ func getCasosPorSexo(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusOK)
     fmt.Fprintf(w, "Category: %v\n", vars["sexo"])
 }
+//so confirmados
+func getCasosConfirmadosData(w http.ResponseWriter, r *http.Request) {
+	if len(casos) == 0{
+		preencherListCasos()
+	}
 
+	data := mux.Vars(r)
+	data := data["data"]+" 00:00:00"
+
+	resultado := []dadosUsuario{}
+	for _, caso := range casos {
+		if(caso.MUNICIPIOPACIENTE == "RUSSAS"){
+		if (data == caso.DATARESULTADOEXAME){
+			if (caso.OBITOCONFIRMADO == "true"){
+				resultado = append(resultado, caso)
+			}
+		}
+	}
+	}
+	fmt.Println(reflect.TypeOf(resultado))
+	fmt.Println(reflect.TypeOf(data))
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+
+}
 type casosPorSexo struct{
 	IDADEPACIENTE string
 	MUNICIPIOPACIENTE string
@@ -354,6 +377,7 @@ func main() {
 	rotas.HandleFunc("/covid/letalidade", getLetalidade).Methods("GET")
 	rotas.HandleFunc("/covid/casosRecuperados", getCasosRecuperados).Methods("GET")
 	rotas.HandleFunc("/covid/casos/{sexo}", getCasosPorSexo).Methods("GEt")
+	rotas.HandleFunc("/covid/casosConfimadosData/{data}", getCasosConfirmadosData).Methods("GEt")
 	//casos por sexo, por idade, por municipio. falta corrigir a questão de organizar as
 	//requests que recebem parametros. :-)
 
