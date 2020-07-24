@@ -10,6 +10,7 @@ import (
 	"os"
 	"encoding/json"
 	"reflect"
+	//"strings"
 )	
 
 var casos = []dadosUsuario{}
@@ -253,53 +254,43 @@ func getCasosRecuperados(w http.ResponseWriter, r *http.Request) {
 //so confirmados
 func getCasosPorSexo(w http.ResponseWriter, r *http.Request) {
 
-	csvLines := abrirCSV()
-	//casos := []dadosUsuario{}
-
-	sexo := mux.Vars(r)
-	count := 0
-
-	for i, line := range csvLines {
-		
-		
-		coluna := string(line[33])
-		fmt.Println(sexo, i, coluna)
-		//	if  (strings.Compare(coluna, sexo)) == 0{
-	//		count ++
-	//	}
-
+	if len(casos) == 0{
+		preencherListCasos()
 	}
-	fmt.Println(count)
 
+	sexo :=mux.Vars(r)
+	resultado := []dadosUsuario{}
 
-	vars := mux.Vars(r)
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Category: %v\n", vars["sexo"])
+	for i, caso := range casos {
+		if caso.SEXOPACIENTE == sexo["sexo"] {
+			resultado = append(resultado, caso)		
+		}
+	}
+	
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
-//so confirmados
+
+//so confirmados data -> passa a data no formato "aaaa-mm-dd"
 func getCasosConfirmadosData(w http.ResponseWriter, r *http.Request) {
 	if len(casos) == 0{
 		preencherListCasos()
 	}
 
-	data := mux.Vars(r)
-	data := data["data"]+" 00:00:00"
+	data :=mux.Vars(r)
+   	data["data"] = data["data"]+" 00:00:00.0"
 
 	resultado := []dadosUsuario{}
 	for _, caso := range casos {
-		if(caso.MUNICIPIOPACIENTE == "RUSSAS"){
-		if (data == caso.DATARESULTADOEXAME){
+		if (data["data"] == caso.DATARESULTADOEXAME){
 			if (caso.OBITOCONFIRMADO == "true"){
 				resultado = append(resultado, caso)
 			}
 		}
+
 	}
-	}
-	fmt.Println(reflect.TypeOf(resultado))
-	fmt.Println(reflect.TypeOf(data))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
-
 }
 type casosPorSexo struct{
 	IDADEPACIENTE string
