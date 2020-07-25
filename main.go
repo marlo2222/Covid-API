@@ -10,6 +10,7 @@ import (
 	"os"
 	"encoding/json"
 	"reflect"
+	"time"
 	//"strings"
 )	
 
@@ -18,7 +19,7 @@ var casos = []dadosUsuario{}
 func abrirCSV() [][]string{
 
 	csvFile, err := os.Open("csv/casos_coronavirus.csv")
-	
+
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -34,6 +35,7 @@ func abrirCSV() [][]string{
 
 	return csvLines
 }
+
 //preencho a lit
 func preencherListCasos(){
 
@@ -77,10 +79,151 @@ func preencherListCasos(){
 			caso.RESULTADOFINALEXAME = line[32]
 			caso.SEXOPACIENTE = line[33]
 
-			casos = append(casos, caso)
-			
+			casos = append(casos, caso)	
 	}
 }
+
+//quantidade casos investigação
+func getAmoutCasosInvestigacao(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	quantidade := 0
+	for _, caso := range casos {
+		if caso.RESULTADOFINALEXAME != "Em An�lise" {
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{"casosInvestigados": quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//quantidade numero exames
+func getAmoutNumeroExames(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	quantidade := 0
+	for _, caso := range casos {
+		if caso.DATACOLETAEXAME != "" {
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{"NumeroExames": quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//quantidade casos confirmados
+func getAmoutCasosConfirmados(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	quantidade := 0
+	for _, caso := range casos {
+		if caso.RESULTADOFINALEXAME == "Positivo" {
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{"casosConfirmados": quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//quantidade casos confirmados municipio
+func getAmoutCasosConfirmadosMunicipio(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	municipio := mux.Vars(r)
+	quantidade := 0
+	for _, caso := range casos {
+		if caso.RESULTADOFINALEXAME == "Positivo" && caso.MUNICIPIOPACIENTE == municipio["municipio"]{
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{municipio["municipio"]: quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//obitos acumulados
+func getAmoutObitosAcumulados(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	quantidade := 0
+	for _, caso := range casos {
+		if (caso.OBITOCONFIRMADO == "true"){
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{"obitosConfirmados": quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+//obitos acumulados municipio
+func getAmoutObitosAcumuladosMunicipio(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	municipio := mux.Vars(r)	
+	quantidade := 0
+	for _, caso := range casos {
+		
+		if (caso.OBITOCONFIRMADO == "true" && caso.MUNICIPIOPACIENTE == municipio["municipio"]){
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{municipio["municipio"]: quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//obitos 24 horas
+func getAmoutObitos24Horas(w http.ResponseWriter, r *http.Request){
+	timeNow := time.Now()
+	fmt.Println(timeNow.Format("2017-02-07"))	
+}
+
+//letalidade
+func getAmoutLetalidade(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	numMortes := 0
+	numCasos := 0
+	for _, caso := range casos {
+		if (caso.OBITOCONFIRMADO == "true"){
+			numMortes ++
+		}
+		if caso.RESULTADOFINALEXAME == "Positivo" {
+			numCasos ++
+		}
+	}
+	letalidade := (float64(numMortes)/float64(numCasos)) *100
+	resultado := map[string]float64{"Letalidade": letalidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//letalidade
+func getAmoutCasosRecuperados(w http.ResponseWriter, r *http.Request){
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	quantidade := 0
+	for _, caso := range casos {
+		if (caso.DATASAIDAUTISSVEP != ""){
+			quantidade ++
+		}
+	}
+	resultado := map[string]int{"CasosRecuperados": quantidade}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
 
 //estou pegando somente os positivos por enquanto{a lista e muito grande}
 func getAll(w http.ResponseWriter, r *http.Request) {
@@ -100,41 +243,10 @@ func getAll(w http.ResponseWriter, r *http.Request) {
 
 //preciso ver se retorno somente a quantidade
 func getNumeroExames(w http.ResponseWriter, r *http.Request) {
-	
-	if len(casos) == 0{
-		preencherListCasos()
-	}
-
-	count := 0
-	exames := []Exame{}
-	for i, caso := range casos {
-			if i == 1 || i == 3 || i == 100 {
-				if (caso.DATACOLETAEXAME == "" || caso.DATASOLICITACAOEXAME == ""){
-					continue
-				}
-			fmt.Println(caso.DATACOLETAEXAME, caso.DATASOLICITACAOEXAME )
-			count ++
-			exame := Exame{}
-			exame.DATACOLETAEXAME = caso.DATACOLETAEXAME
-			exame.DATASOLICITACAOEXAME = caso.DATASOLICITACAOEXAME
-			exames = append(exames, exame)
-		}	
-	}
-	
-	resultado := NumeroExames{
-		quantidade: count,
-		exames: exames,
-	}
-	//mapD := mapmmmtring]int{"exames": count}
-   // mapB, _ := json.Marshal(mapD)
-	//resultado.quantidade = count
-	fmt.Println(resultado.quantidade)
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultado)
 
 }
 
-//casos confirmados
+//casos confirmados 
 func getCasosConfirmados(w http.ResponseWriter, r *http.Request) {
 
 	if len(casos) == 0{
@@ -156,7 +268,6 @@ func getCasosConfirmadosMunicipio(w http.ResponseWriter, r *http.Request) {
 	if len(casos) == 0{
 		preencherListCasos()
 	}
-
 	municipio := mux.Vars(r)
 	resultado := []dadosUsuario{}
 	for _, caso := range casos {
@@ -173,31 +284,51 @@ func getCasosConfirmadosMunicipio(w http.ResponseWriter, r *http.Request) {
 
 //casos confirmados por sexo.
 func getCasosConfirmadosPorSexo(w http.ResponseWriter, r *http.Request) {
-
 	if len(casos) == 0{
 		preencherListCasos()
 	}
-
 	sexo := mux.Vars(r)
 	resultado := []dadosUsuario{}
 	for _, caso := range casos {
-		fmt.Println(sexo["sexo"])
-		fmt.Println(caso.SEXOPACIENTE)
 		if (sexo["sexo"] == caso.SEXOPACIENTE){
 			if (caso.RESULTADOFINALEXAME == "Positivo"){
 				resultado = append(resultado, caso)
 			}
 		}
 	}
-	fmt.Println(reflect.TypeOf(resultado))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 }
 
+//casos investigação
 func getCasosInvestigacao(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Isto ainda não serve para nada \n")
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	resultado := []dadosUsuario{}
+	for _, caso := range casos {
+		if (caso.RESULTADOFINALEXAME == "Em An�lise"){
+			resultado = append(resultado, caso)
+		}
+	
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+
+//casos comfirmados e investigação
+func getCasosConfirmadosInvestigacao(w http.ResponseWriter, r *http.Request) {
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	resultado := []dadosUsuario{}
+	for _, caso := range casos {
+		if (caso.RESULTADOFINALEXAME == "Em An�lise" || caso.RESULTADOFINALEXAME == "Positivo"){
+			resultado = append(resultado, caso)
+		}
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
 }
 
 //obitos geral
@@ -213,7 +344,6 @@ func getAllObitos(w http.ResponseWriter, r *http.Request) {
 		}
 	
 	}
-	fmt.Println(reflect.TypeOf(resultado))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 }
@@ -223,7 +353,6 @@ func getObitosMunicipio(w http.ResponseWriter, r *http.Request) {
 	if len(casos) == 0{
 		preencherListCasos()
 	}
-
 	municipio := mux.Vars(r)
 	resultado := []dadosUsuario{}
 	for _, caso := range casos {
@@ -233,40 +362,37 @@ func getObitosMunicipio(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	fmt.Println(reflect.TypeOf(resultado))
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resultado)
+}
+//não tem na planilha -> falta fazer
+func getCasosRecuperados(w http.ResponseWriter, r *http.Request) {
+	if len(casos) == 0{
+		preencherListCasos()
+	}
+	resultado := []dadosUsuario{}
+	for _, caso := range casos {
+		if (caso.DATASAIDAUTISSVEP != ""){
+			resultado = append(resultado, caso)
+		}
+	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 }
 
-func getLetalidade(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Category: %v\n")
-}
-
-
-func getCasosRecuperados(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "Category: %v\n")
-}
-
-//so confirmados
+//casos confirmados sexo
 func getCasosPorSexo(w http.ResponseWriter, r *http.Request) {
-
 	if len(casos) == 0{
 		preencherListCasos()
 	}
-
 	sexo :=mux.Vars(r)
 	resultado := []dadosUsuario{}
 
-	for i, caso := range casos {
+	for _, caso := range casos {
 		if caso.SEXOPACIENTE == sexo["sexo"] {
 			resultado = append(resultado, caso)		
 		}
 	}
-	
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
 }
@@ -276,10 +402,8 @@ func getCasosConfirmadosData(w http.ResponseWriter, r *http.Request) {
 	if len(casos) == 0{
 		preencherListCasos()
 	}
-
 	data :=mux.Vars(r)
    	data["data"] = data["data"]+" 00:00:00.0"
-
 	resultado := []dadosUsuario{}
 	for _, caso := range casos {
 		if (data["data"] == caso.DATARESULTADOEXAME){
@@ -287,7 +411,6 @@ func getCasosConfirmadosData(w http.ResponseWriter, r *http.Request) {
 				resultado = append(resultado, caso)
 			}
 		}
-
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resultado)
@@ -348,12 +471,6 @@ type dadosUsuario struct {
 }
 
 
-
-
-//var casosS casosPorSexo
-//var casos  dadosUsuario
-//casos := []dadosUsuario{}
-
 func main() {
 	rotas := mux.NewRouter().StrictSlash(true)
 
@@ -363,14 +480,25 @@ func main() {
 	rotas.HandleFunc("/covid/casosConfirmados/{municipio}", getCasosConfirmadosMunicipio).Methods("GET")
 	rotas.HandleFunc("/covid/casosConfirmadosSexo/{sexo}", getCasosConfirmadosPorSexo).Methods("GET")
 	rotas.HandleFunc("/covid/casosInvestigacao", getCasosInvestigacao).Methods("GET")
+	rotas.HandleFunc("/covid/casosConfirmadosInvestigacao", getCasosConfirmadosInvestigacao).Methods("GET")
 	rotas.HandleFunc("/covid/obitos", getAllObitos).Methods("GET")
 	rotas.HandleFunc("/covid/obitos/{municipio}", getObitosMunicipio).Methods("GET")
-	rotas.HandleFunc("/covid/letalidade", getLetalidade).Methods("GET")
 	rotas.HandleFunc("/covid/casosRecuperados", getCasosRecuperados).Methods("GET")
 	rotas.HandleFunc("/covid/casos/{sexo}", getCasosPorSexo).Methods("GEt")
 	rotas.HandleFunc("/covid/casosConfimadosData/{data}", getCasosConfirmadosData).Methods("GEt")
 	//casos por sexo, por idade, por municipio. falta corrigir a questão de organizar as
-	//requests que recebem parametros. :-)
+	//requests por quantidade
+	rotas.HandleFunc("/covid/getAmoutCasosInvestigacao", getAmoutCasosInvestigacao).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutNumeroExames", getAmoutNumeroExames).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutObitosAcumulados", getAmoutObitosAcumulados).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutObitosAcumuladosMunicipio/{municipio}", getAmoutObitosAcumuladosMunicipio).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutCasosConfirmados", getAmoutCasosConfirmados).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutCasosConfirmadosMunicipio", getAmoutCasosConfirmadosMunicipio).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutLetalidade", getAmoutLetalidade).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutNumeroExames", getAmoutNumeroExames).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutObitos24Horas", getAmoutObitos24Horas).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutCasosRecuperados", getAmouCasosRecuperados).Methods("GEt")
+
 
 	var port = ":3000"
 	fmt.Println("Server running in port:", port)
