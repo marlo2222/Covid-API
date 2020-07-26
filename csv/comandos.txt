@@ -1,0 +1,55 @@
+-> alguns comandos docer uteis: 
+- docker run --publish 6060:8080 --name trabalho  --rm trabalho
+- docker build -t {container } .
+- docker run  -p 8500:8500 -p 8600:8600/udp --name=consul consul:v0.6.4 agent -server -bootstrap -ui -client=0.0.0.0
+- docker-compose build  
+- docker-compose up -d
+- docker-compose down
+
+-> para entrar no container
+- docker-compose exec {container} bash
+
+-> para subir um servidor com o consul.
+- dentro do container com o consul execute o seguinte comando:
+* consul agent -server -ui -bootstrap-expect 1 -data-dir /var/consul.d -config-dir /etc/consul.d -node consul-master -client 0.0.0.0
+
+-> consul members -> lista todos os nodes
+
+-> para subir as outras instancias como cliente do server
+- detro do container onde esta o trabalho(api)
+- consul agent -data-dir /var/consul.d -config-dir /etc/consul.d -node trabalho-cliente1
+
+#importante 
+-> nos container (trabalho1 ou trabalho2): 
+* apt update
+* apt install unzip
+* apt install vim
+* wget https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+* unzip consul_1.7.2_linux_amd64.zip && mv consul /usr/bin && rm -f consul*
+* mkdir /etc/consul.d && mkdir /var/consul.d
+
+- instalar o vim, com apt install vim: 
+
+- inserir o seguinte arquivo, no caminho vim /etc/consul.d/webserver.json
+{
+  "service": {
+    "name": "cliente1",
+    "tags": ["tagcliente1"]
+    "port": 80
+  }
+}
+
+- apos execute: consul agent -data-dir /var/consul.d -config-dir /etc/consul.d -node trabalho-cliente1
+- abra uma nova janela do bash do container e verifique com consul members que agora esta listado
+- apos em outrr janela so shell era preciso executar o comando: consul join consul-master
+- apos isso se você verificar localhost:8500/ui vai perceber que as instancias estão registradas.
+
+-> editando o arquivo de configuração master do Nginx: 
+- acesse: 
+* vim /etc/nginx/conf.d/default.conf
+
+resolver localhost:8600 valid=250;
+set $webserver htpp://webserver.service.consul;
+location / {
+    proxy_pass $webserver
+}
