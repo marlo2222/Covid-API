@@ -497,10 +497,10 @@ func main() {
 	rotas.HandleFunc("/covid/getAmoutLetalidade", getAmoutLetalidade).Methods("GEt")
 	rotas.HandleFunc("/covid/getAmoutNumeroExames", getAmoutNumeroExames).Methods("GEt")
 	rotas.HandleFunc("/covid/getAmoutObitos24Horas", getAmoutObitos24Horas).Methods("GEt")
-	rotas.HandleFunc("/covid/getAmoutCasosRecuperados", getAmouCasosRecuperados).Methods("GEt")
+	rotas.HandleFunc("/covid/getAmoutCasosRecuperados", getAmoutCasosRecuperados).Methods("GEt")
 
 
-	var port = ":3000"
+	var port = ":8080"
 	fmt.Println("Server running in port:", port)
 	log.Fatal(http.ListenAndServe(port, rotas))
 
