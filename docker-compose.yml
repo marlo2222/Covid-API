@@ -1,0 +1,25 @@
+version: '3'
+services:
+  trabalho1:
+    build: .
+    ports:
+     - "6060:8080"
+    networks:
+      - app-network
+  trabalho2:
+    build: .
+    ports:
+      - "6061:8080"
+    networks:
+      - app-network
+  consul-master:
+    build: consul/.
+    command: 'consul agent -server -ui -bootstrap-expect 1 -data-dir /var/consul.d -config-dir /etc/consul.d -node consul-master -client 0.0.0.0'
+    ports: 
+      - "8080:80"
+      - "8500:8500"
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
