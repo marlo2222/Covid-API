@@ -34,11 +34,11 @@ dentro do container da imagem do consul execute:
 
 :pushpin: OBS: para entrar no container onde está executandoa imagem consul você pode usar : `docker-compose exec {container} bash`
 
-###Sugestões e melhorias: :heart:
+### Sugestões e melhorias: :heart:
 
-Está é a primeira versão do projeto. Uma serie de melhorias ainda precisam ser feitas.
+- Está é a primeira versão do projeto. Uma serie de melhorias ainda precisam ser feitas.
 
-Em breve estarei disponibilizando uma doc para os endpoints disponíveis  bem como um `link` para acesso.
+- Em breve estarei disponibilizando uma doc para os endpoints disponíveis  bem como um `link` para acesso.
 
 ### este projeto foi realizado junto com os colegas: 
 
