@@ -1,4 +1,4 @@
-# API para dados de covid no Ceará. :chart_with_upwards_tr:
+# API para dados de covid no Ceará. :bar_chart:
 
 
 ## Descrição do projeto :pencil2:
