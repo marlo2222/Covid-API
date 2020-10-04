@@ -17,7 +17,7 @@
 
 -> para subir as outras instancias como cliente do server
 - detro do container onde esta o trabalho(api)
-- consul agent -data-dir /var/consul.d -config-dir /etc/consul.d -node trabalho-cliente1
+- consul agent -data-dir /var/consul.d -config-dir /etc/consul.d -node trabalho-cliente2
 
 #importante 
 -> nos container (trabalho1 ou trabalho2): 

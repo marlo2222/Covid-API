@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"time"
-	//"strings"
 )	
 
 var casos = []dadosUsuario{}
@@ -224,6 +223,12 @@ func getAmoutCasosRecuperados(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(resultado)
 }
 
+//estou pegando somente os positivos por enquanto{a lista e muito grande}
+func get(w http.ResponseWriter, r *http.Request) {
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "/covid: retorna todas as informaçoes do CSV \n /covid/numeroExames: retorna as informaçoes ds exames realizados \n /covid/casosConfirmados: retorna as informações dos casos confirmados \n /covid/casosConfirmados/{municipio}:  Informaçoes dos casos confirmados por municipio \n /covid/casosConfirmadosSexo/{sexo}: retorna as informaçoes por sexo \n /covid/casosInvestigacao: retorna as informaçoes dos casos em investigação \n /covid/casosConfirmadosInvestigacao: retorna a informação dos casos investigados \n /covid/obitos: retorna a informação dos obitos \n /covid/obitos/{municipio}: retorna a informação dos obitos por municipio \n /covid/casosRecuperados: retorna as informaçoes dos casos recuperados \n /covid/casos/{sexo}: retorna informação de todos os casos por sexo  \n /covid/casosConfimadosData/{data}: retorna os casos por data \n /covid/getAmoutCasosInvestigacao: numero de casos em investigação \n /covid/getAmoutNumeroExames: numero de exames \n /covid/getAmoutObitosAcumulados: numero de obitos acumulados \n /covid/getAmoutObitosAcumuladosMunicipio/{municipio}: numero de obitos acumulados municipio \n /covid/getAmoutLetalidade: letalidade \n /covid/getAmoutNumeroExames: numero de exames \n /covid/getAmoutCasosRecuperados: numero casos recuperados %v\n")
+}
 
 //estou pegando somente os positivos por enquanto{a lista e muito grande}
 func getAll(w http.ResponseWriter, r *http.Request) {
@@ -474,6 +479,7 @@ type dadosUsuario struct {
 func main() {
 	rotas := mux.NewRouter().StrictSlash(true)
 
+	rotas.HandleFunc("/", get).Methods("GET")
 	rotas.HandleFunc("/covid", getAll).Methods("GET")
 	rotas.HandleFunc("/covid/numeroExames", getNumeroExames).Methods("GET")
 	rotas.HandleFunc("/covid/casosConfirmados", getCasosConfirmados).Methods("GET")
